@@ -97,10 +97,7 @@ function NotificationItem({
   );
 }
 
-function AnnouncementItem({
-  announcement,
-  loading,
-}) {
+function AnnouncementItem({ announcement }) {
   const { module } = announcement;
 
   return (
@@ -129,13 +126,21 @@ function AnnouncementItem({
           </Flex>
         </Flex>
         <Flex justify="space-between">
-          <Text>{"No description available."}</Text>
+          <Text>No description available.</Text>
         </Flex>
       </Paper>
     </Grid.Col>
   );
 }
 
+AnnouncementItem.propTypes = {
+  announcement: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    module: PropTypes.string,
+    message: PropTypes.string.isRequired,
+    created_at: PropTypes.string.isRequired,
+  }).isRequired,
+};
 
 function Dashboard() {
   const [notificationsList, setNotificationsList] = useState([]);
@@ -158,7 +163,7 @@ function Dashboard() {
         const { data } = await axios.get(getNotificationsRoute, {
           headers: { Authorization: `Token ${token}` },
         });
-        const announcementsData  = await axios.get(getAnnouncementsRoute, {
+        const announcementsData = await axios.get(getAnnouncementsRoute, {
           headers: { Authorization: `Token ${token}` },
         });
         const { notifications } = data;
@@ -174,9 +179,7 @@ function Dashboard() {
             (item) => item.data?.flag !== "announcement",
           ),
         );
-        setAnnouncementsList(
-          announcements
-        );
+        setAnnouncementsList(announcements);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -379,6 +382,13 @@ function Dashboard() {
         ) : sortedNotifications.filter((notification) => !notification.deleted)
             .length === 0 ? (
           <Empty />
+        ) : activeTab === "1" ? (
+          announcementsList.map((announcement) => (
+            <AnnouncementItem
+              announcement={announcement}
+              loading={read_Loading}
+            />
+          ))
         ) : (
           sortedNotifications
             .filter((notification) => !notification.deleted)
