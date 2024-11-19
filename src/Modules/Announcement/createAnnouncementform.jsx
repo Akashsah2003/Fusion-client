@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from "react";
 import {
   Button,
+  Checkbox,
   Container,
   Flex,
   Grid,
@@ -11,10 +13,13 @@ import {
   FileInput,
   MultiSelect,
   NumberInput,
+  ScrollArea,
+  Textarea,
 } from "@mantine/core";
 import axios from "axios";
 import CustomBreadcrumbs from "../../components/Breadcrumbs";
 import classes from "./createAnnouncement.module.css";
+
 import { host } from "../../routes/globalRoutes";
 import {
   userSearchRoute,
@@ -69,6 +74,7 @@ function CreateAnnouncement() {
 
     fetchDepartments();
   }, []);
+
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("authToken");
