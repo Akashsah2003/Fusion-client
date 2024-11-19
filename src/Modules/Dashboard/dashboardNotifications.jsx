@@ -29,6 +29,7 @@ import {
   notificationDeleteRoute,
   notificationUnreadRoute,
   getNotificationsRoute,
+  getAnnouncementsRoute,
 } from "../../routes/dashboardRoutes";
 
 const categories = ["Most Recent", "Tags", "Title"];
@@ -96,6 +97,51 @@ function NotificationItem({
   );
 }
 
+function AnnouncementItem({ announcement }) {
+  const { module } = announcement;
+
+  return (
+    <Grid.Col span={{ base: 12, md: 6 }} key={announcement.id}>
+      <Paper
+        radius="md"
+        px="lg"
+        pt="sm"
+        pb="xl"
+        style={{ borderLeft: "0.6rem solid #15ABFF" }}
+        withBorder
+        maw="1240px"
+      >
+        <Flex justify="space-between">
+          <Flex direction="column">
+            <Flex gap="md">
+              <Text fw={600} size="1.2rem" mb="0.4rem">
+                {announcement.message}
+              </Text>
+              <Badge color="#15ABFF">{module || "N/A"}</Badge>
+            </Flex>
+            <Text c="#6B6B6B" size="0.7rem">
+              {new Date(announcement.created_at).toLocaleDateString()}
+            </Text>
+            <Divider my="sm" w="10rem" />
+          </Flex>
+        </Flex>
+        <Flex justify="space-between">
+          <Text>No description available.</Text>
+        </Flex>
+      </Paper>
+    </Grid.Col>
+  );
+}
+
+AnnouncementItem.propTypes = {
+  announcement: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    module: PropTypes.string,
+    message: PropTypes.string.isRequired,
+    created_at: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 function Dashboard() {
   const [notificationsList, setNotificationsList] = useState([]);
   const [announcementsList, setAnnouncementsList] = useState([]);
@@ -117,7 +163,12 @@ function Dashboard() {
         const { data } = await axios.get(getNotificationsRoute, {
           headers: { Authorization: `Token ${token}` },
         });
+        const announcementsData = await axios.get(getAnnouncementsRoute, {
+          headers: { Authorization: `Token ${token}` },
+        });
         const { notifications } = data;
+        const announcements = announcementsData.data;
+        console.log(announcements);
         const notificationsData = notifications.map((item) => ({
           ...item,
           data: JSON.parse(item.data.replace(/'/g, '"')),
@@ -128,11 +179,7 @@ function Dashboard() {
             (item) => item.data?.flag !== "announcement",
           ),
         );
-        setAnnouncementsList(
-          notificationsData.filter(
-            (item) => item.data?.flag === "announcement",
-          ),
-        );
+        setAnnouncementsList(announcements);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -161,9 +208,7 @@ function Dashboard() {
   const notification_for_badge_count =
     activeTab === "0" ? announcementsList : notificationsList;
 
-  const notification_count = notification_for_badge_count.filter(
-    (n) => !n.deleted && n.unread,
-  ).length;
+  const notification_count = notification_for_badge_count.length;
 
   // sortMap is an object that maps sorting categories to sorting functions.
   const sortedNotifications = useMemo(() => {
@@ -190,11 +235,6 @@ function Dashboard() {
             notif.id === notifId ? { ...notif, unread: false } : notif,
           ),
         );
-        setAnnouncementsList((prev) =>
-          prev.map((notif) =>
-            notif.id === notifId ? { ...notif, unread: false } : notif,
-          ),
-        );
       }
     } catch (err) {
       console.error("Error marking notification as read:", err);
@@ -214,11 +254,6 @@ function Dashboard() {
       );
       if (response.status === 200) {
         setNotificationsList((prev) =>
-          prev.map((notif) =>
-            notif.id === notifId ? { ...notif, unread: true } : notif,
-          ),
-        );
-        setAnnouncementsList((prev) =>
           prev.map((notif) =>
             notif.id === notifId ? { ...notif, unread: true } : notif,
           ),
@@ -247,9 +282,6 @@ function Dashboard() {
 
       if (response.status === 200) {
         setNotificationsList((prev) =>
-          prev.filter((notif) => notif.id !== notifId),
-        );
-        setAnnouncementsList((prev) =>
           prev.filter((notif) => notif.id !== notifId),
         );
 
@@ -350,6 +382,13 @@ function Dashboard() {
         ) : sortedNotifications.filter((notification) => !notification.deleted)
             .length === 0 ? (
           <Empty />
+        ) : activeTab === "1" ? (
+          announcementsList.map((announcement) => (
+            <AnnouncementItem
+              announcement={announcement}
+              loading={read_Loading}
+            />
+          ))
         ) : (
           sortedNotifications
             .filter((notification) => !notification.deleted)
