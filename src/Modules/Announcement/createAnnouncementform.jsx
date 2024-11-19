@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
-  Checkbox,
   Container,
   Flex,
   Grid,
@@ -9,36 +8,67 @@ import {
   TextInput,
   Title,
   Select,
-  ScrollArea,
-  Textarea,
   FileInput,
+  MultiSelect,
+  NumberInput,
 } from "@mantine/core";
 import axios from "axios";
 import CustomBreadcrumbs from "../../components/Breadcrumbs";
 import classes from "./createAnnouncement.module.css";
-import userIDs from "./userIDs";
+import { host } from "../../routes/globalRoutes";
+import {
+  userSearchRoute,
+  departmentinfoRoute,
+} from "../../routes/announcementRoutes";
 
-const categories = [
-  "All",
-  "Staff and Student",
-  "Students",
-  "Faculty",
-  "Faculty and Staff",
-  "Staff",
-];
-const batches = ["2019", "2020", "2021", "2022", "2023", "2024"];
-const departments = ["CSE", "ECE", "ME", "SM", "DES"];
+const categories = ["all", "students", "faculty", "specific_users"];
 
 function CreateAnnouncement() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(categories[0]);
-  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [attachment, setAttachment] = useState(null);
-  const [department, setDepartment] = useState(departments[0]);
-  const [batch, setBatch] = useState(batches[0]);
+  const [department, setDepartment] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [batch, setBatch] = useState(null);
+  const [options, setOptions] = useState([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
+
+  const fetchUsers = async (query) => {
+    if (!query) return;
+
+    setLoading(true);
+    try {
+      const response = await axios.get(userSearchRoute, {
+        params: { q: query },
+      });
+
+      const users = response.data.results.map((user) => ({
+        value: user.id.toString(),
+        label: user.text,
+      }));
+
+      setOptions(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get(departmentinfoRoute); // No token in headers
+        setDepartments(response.data); // Set departments from the response
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("authToken");
@@ -48,21 +78,33 @@ function CreateAnnouncement() {
 
     try {
       const payload = {
-        title,
-        category,
-        description,
-        flag: "announcement",
+        message: title,
+        target_group: category,
+        specific_users: selectedUsers,
       };
-      const response = await axios.post("/api/announcement/create", payload, {
-        headers: { Authorization: `Token ${token}` },
-      });
+      if (batch) {
+        payload.batch = batch;
+      }
+      if (department) {
+        payload.department = department;
+      }
+      console.log("Payload:", payload);
+      const response = await axios.post(
+        `${host}/notifications/api/announcements/create`,
+        payload,
+        {
+          headers: { Authorization: `Token ${token}` },
+        },
+      );
 
       if (response.status === 200) {
         console.log("Announcement created successfully");
         // Reset form
         setTitle("");
         setCategory(categories[0]);
-        setDescription("");
+        // setDescription("");
+        setDepartment("");
+        setSelectedUsers([]);
       }
     } catch (error) {
       console.error("Error creating announcement:", error);
@@ -122,63 +164,43 @@ function CreateAnnouncement() {
                   <Select
                     label="Department"
                     placeholder="Select department"
-                    data={departments}
-                    value={department}
-                    onChange={setDepartment}
+                    data={departments.map((dep) => ({
+                      value: String(dep.id), // Use the department ID or unique identifier
+                      label: dep.name, // Use the department name or appropriate display name
+                    }))}
+                    value={String(department)}
+                    onChange={(value) => setDepartment(value)}
                     classNames={{
                       input: classes.selectInput,
                     }}
-                    required
                   />
                 </Grid.Col>
 
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Select
+                  <NumberInput
                     label="Batch"
-                    placeholder="Select category"
-                    data={batches}
+                    placeholder="Enter Batch"
                     value={batch}
-                    onChange={setBatch}
+                    onChange={(value) => setBatch(value)} // Directly use the value provided
                     classNames={{
-                      input: classes.selectInput,
+                      input: classes.announcementInput,
                     }}
-                    required
                   />
                 </Grid.Col>
 
                 <Grid.Col span={12}>
-                  <Checkbox.Group
-                    label="specific users"
+                  <MultiSelect
+                    label="Specific Users"
+                    placeholder="Search and select users"
+                    searchable
+                    nothingFound="No users found"
+                    data={options}
                     value={selectedUsers}
-                    onChange={setSelectedUsers}
-                  >
-                    <ScrollArea
-                      style={{
-                        height: 200,
-                        border: "1px solid #ccc",
-                        padding: "10px",
-                        borderRadius: "4px",
-                      }}
-                      offsetScrollbars
-                    >
-                      {userIDs.map((id) => (
-                        <Checkbox key={id} value={id} label={id} />
-                      ))}
-                    </ScrollArea>
-                  </Checkbox.Group>
-                </Grid.Col>
-
-                <Grid.Col span={12}>
-                  <Textarea
-                    label="Description"
-                    placeholder="Write announcement details"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    minRows={5}
-                    classNames={{
-                      input: classes.textAreaInput,
-                    }}
-                    required
+                    onChange={(value) => {
+                      setSelectedUsers(value);
+                      console.log(value);
+                    }} // Updates selected users
+                    onSearchChange={fetchUsers} // Fetch users based on query
                   />
                 </Grid.Col>
 
@@ -201,7 +223,7 @@ function CreateAnnouncement() {
                   onClick={handleSubmit}
                   loading={loading}
                   loaderProps={{ type: "dots" }}
-                  disabled={!title || !description}
+                  disabled={!title}
                 >
                   Create Announcement
                 </Button>
