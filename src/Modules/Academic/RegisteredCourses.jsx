@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Text } from "@mantine/core";
 import FusionTable from "../../components/FusionTable";
 
-const courses = [
+const mockRegisteredCoursesAPIResponse = [
   {
     id: 1,
     code: "OE3C41",
@@ -61,28 +61,43 @@ const courses = [
   },
 ];
 
-// Column names for the table
-const columnNames = [
-  "ID",
-  "Course Code",
-  "Course Name",
-  "Type",
-  "Semester",
-  "Credits",
-];
-
-const mappedCourses = courses.map((course) => ({
-  ID: course.id,
-  "Course Code": course.code,
-  "Course Name": course.name,
-  Type: course.type,
-  Semester: course.semester,
-  Credits: course.credits,
-}));
-
-const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
-
 function RegisteredCourses() {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const data = await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(mockRegisteredCoursesAPIResponse);
+        }, 500);
+      });
+      setCourses(data);
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Define column headers for FusionTable
+  const columnNames = [
+    "ID",
+    "Course Code",
+    "Course Name",
+    "Type",
+    "Semester",
+    "Credits",
+  ];
+
+  const mappedCourses = courses.map((course) => ({
+    ID: course.id,
+    "Course Code": course.code,
+    "Course Name": course.name,
+    Type: course.type,
+    Semester: course.semester,
+    Credits: course.credits,
+  }));
+
+  const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+
   return (
     <Card shadow="sm" p="lg" radius="md" withBorder>
       <Text

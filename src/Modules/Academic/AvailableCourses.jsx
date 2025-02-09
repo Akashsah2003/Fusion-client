@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Text } from "@mantine/core";
 import FusionTable from "../../components/FusionTable";
 
-const courses = [
+const mockCoursesAPIResponse = [
   {
     id: 1,
     code: "OE4",
@@ -61,26 +61,42 @@ const courses = [
   },
 ];
 
-// Column names for the table
-const columnNames = [
-  "ID",
-  "Slot Code",
-  "Slot Name",
-  "Slot Type",
-  "Semester",
-  "Credits",
-];
-
-const mappedCourses = courses.map((course) => ({
-  ID: course.id,
-  "Slot Code": course.code,
-  "Slot Name": <Text style={{ whiteSpace: "pre-line" }}>{course.name}</Text>,
-  "Slot Type": course.type,
-  Semester: course.semester,
-  Credits: course.credits,
-}));
-
 function AvailableCourses() {
+  const [courses, setCourses] = useState([]);
+
+  // Simulate an API call to fetch courses
+  const fetchCourses = () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockCoursesAPIResponse);
+      }, 500);
+    });
+  };
+
+  useEffect(() => {
+    fetchCourses().then((data) => {
+      setCourses(data);
+    });
+  }, []);
+
+  const columnNames = [
+    "ID",
+    "Slot Code",
+    "Slot Name",
+    "Slot Type",
+    "Semester",
+    "Credits",
+  ];
+
+  const mappedCourses = courses.map((course) => ({
+    ID: course.id,
+    "Slot Code": course.code,
+    "Slot Name": <Text style={{ whiteSpace: "pre-line" }}>{course.name}</Text>,
+    "Slot Type": course.type,
+    Semester: course.semester,
+    Credits: course.credits,
+  }));
+
   return (
     <Card shadow="sm" p="lg" radius="md" withBorder>
       <Text

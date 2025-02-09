@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Text, Button, Alert, Select } from "@mantine/core";
 import FusionTable from "../../components/FusionTable";
 
+// Course slots data remains constant (could also be fetched from an API if needed)
 const courseSlots = {
   OE4: [
     "OE3C41: Agile Software Development Process",
@@ -52,7 +53,7 @@ const courseSlots = {
   ],
 };
 
-const courses = [
+const mockPreRegistrationAPIResponse = [
   {
     sno: 1,
     id: 1,
@@ -220,10 +221,24 @@ const courses = [
 ];
 
 function PreRegistration() {
+  const [coursesData, setCoursesData] = useState([]);
   const [selections, setSelections] = useState({});
   const [priorities, setPriorities] = useState({});
   const [alertVisible, setAlertVisible] = useState(false);
   const [totalCredits, setTotalCredits] = useState(0);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 500);
+      });
+      setCoursesData(mockPreRegistrationAPIResponse);
+    };
+
+    fetchCourses();
+  }, []);
 
   const handleSelectionChange = (sno, value) => {
     setSelections((prev) => ({ ...prev, [sno]: value }));
@@ -234,7 +249,7 @@ function PreRegistration() {
   };
 
   const isFormComplete = () =>
-    courses.every((course) => selections[course.sno]);
+    coursesData.every((course) => selections[course.sno]);
 
   const handleRegister = () => {
     const pr3Credits = selections[22] === "No" ? 0 : 2;
@@ -256,7 +271,7 @@ function PreRegistration() {
     "Choice",
   ];
 
-  const mappedCourses = courses.map((course) => ({
+  const mappedCourses = coursesData.map((course) => ({
     ID: course.id,
     "Slot Code": course.code,
     Type: course.type,
