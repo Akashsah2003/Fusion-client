@@ -15,7 +15,7 @@ import AcademicCalendar from "./AcademicCalendar";
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
   const role = useSelector(state => state.user.role);
-  const tabItems = (role == "acadadmin") ? [
+  const tabItems = (role == "acadadmin" || role == "studentacadadmin") ? [
     { title: "Student Courses" },
     { title: "Delete Pre-Registration" },
     { title: "Academic Calendar" },
@@ -25,7 +25,7 @@ function AcademicPage() {
     { title: "Pre-Registration" },
     { title: "Final-Registration" },
   ];
-  const tabComponents = (role == "acadadmin") ? [
+  const tabComponents = (role == "acadadmin" || role == "studentacadadmin") ? [
     StudentCourses,
     DeletePreRegistration,
     AcademicCalendar,
