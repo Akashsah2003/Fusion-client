@@ -14,27 +14,29 @@ import AcademicCalendar from "./AcademicCalendar";
 
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
-  const role = useSelector(state => state.user.role);
-  const tabItems = (role == "acadadmin" || role == "studentacadadmin") ? [
-    { title: "Student Courses" },
-    { title: "Delete Pre-Registration" },
-    { title: "Academic Calendar" },
-  ] : [
-    { title: "Registered Courses" },
-    { title: "Available Courses" },
-    { title: "Pre-Registration" },
-    { title: "Final-Registration" },
-  ];
-  const tabComponents = (role == "acadadmin" || role == "studentacadadmin") ? [
-    StudentCourses,
-    DeletePreRegistration,
-    AcademicCalendar,
-  ] : [
-    RegisteredCourses,
-    AvailableCourses,
-    PreRegistration,
-    FinalRegistration,
-  ];
+  const role = useSelector((state) => state.user.role);
+  const tabItems =
+    role === "acadadmin" || role === "studentacadadmin"
+      ? [
+          { title: "Student Courses" },
+          { title: "Delete Pre-Registration" },
+          { title: "Academic Calendar" },
+        ]
+      : [
+          { title: "Registered Courses" },
+          { title: "Available Courses" },
+          { title: "Pre-Registration" },
+          { title: "Final-Registration" },
+        ];
+  const tabComponents =
+    role === "acadadmin" || role === "studentacadadmin"
+      ? [StudentCourses, DeletePreRegistration, AcademicCalendar]
+      : [
+          RegisteredCourses,
+          AvailableCourses,
+          PreRegistration,
+          FinalRegistration,
+        ];
   const ActiveComponent = tabComponents[parseInt(activeTab, 10)];
   return (
     <>
