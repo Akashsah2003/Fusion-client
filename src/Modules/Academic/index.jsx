@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Flex } from "@mantine/core";
+import { useSelector } from "react-redux";
 
 import CustomBreadcrumbs from "../../components/Breadcrumbs";
 import ModuleTabs from "../../components/moduleTabs";
@@ -13,23 +14,26 @@ import AcademicCalendar from "./AcademicCalendar";
 
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
-  const tabItems = [
+  const role = useSelector(state => state.user.role);
+  const tabItems = (role == "acadadmin") ? [
+    { title: "Student Courses" },
+    { title: "Delete Pre-Registration" },
+    { title: "Academic Calendar" },
+  ] : [
     { title: "Registered Courses" },
     { title: "Available Courses" },
     { title: "Pre-Registration" },
     { title: "Final-Registration" },
-    { title: "Student Courses" },
-    { title: "Delete Pre-Registration" },
-    { title: "Academic Calendar" },
   ];
-  const tabComponents = [
+  const tabComponents = (role == "acadadmin") ? [
+    StudentCourses,
+    DeletePreRegistration,
+    AcademicCalendar,
+  ] : [
     RegisteredCourses,
     AvailableCourses,
     PreRegistration,
     FinalRegistration,
-    StudentCourses,
-    DeletePreRegistration,
-    AcademicCalendar,
   ];
   const ActiveComponent = tabComponents[parseInt(activeTab, 10)];
   return (
