@@ -9,106 +9,58 @@ import {
   TextInput,
   Loader,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates";
+import axios from "axios";
 import FusionTable from "../../components/FusionTable";
-
-const hardcodedEvents = [
-  {
-    id: 1,
-    description: "Last Date for Adding/Dropping of course",
-    startDate: "2024-05-06T09:00:00",
-    endDate: "2024-07-27T23:59:00",
-    timestamp: "2024-04-15T10:00:00",
-  },
-  {
-    id: 2,
-    description: "Sem 2024-2025",
-    startDate: "2024-06-01T12:00:00",
-    endDate: "2025-04-30T16:59:00",
-    timestamp: "2024-04-15T10:05:00",
-  },
-  {
-    id: 3,
-    description: "Physical Reporting at the Institute",
-    startDate: "2024-07-06T09:00:00",
-    endDate: "2024-07-31T23:59:00",
-    timestamp: "2024-04-15T10:10:00",
-  },
-  {
-    id: 4,
-    description: "Course verification date",
-    startDate: "2024-07-06T12:00:00",
-    endDate: "2024-07-31T16:59:00",
-    timestamp: "2024-04-15T10:15:00",
-  },
-  {
-    id: 5,
-    description: "Pre Registration 3 2024",
-    startDate: "2024-06-01T00:00:00",
-    endDate: "2024-07-17T23:59:00",
-    timestamp: "2024-04-15T10:20:00",
-  },
-  {
-    id: 6,
-    description: "Pre Registration 7 2024",
-    startDate: "2024-07-18T09:00:00",
-    endDate: "2024-07-20T16:59:00",
-    timestamp: "2024-04-15T10:25:00",
-  },
-  {
-    id: 7,
-    description: "Pre Registration 5 2024",
-    startDate: "2024-07-21T12:00:00",
-    endDate: "2024-07-22T16:59:00",
-    timestamp: "2024-04-15T10:30:00",
-  },
-];
+import {
+  calendarRoute,
+  editCalendarRoute,
+  addCalendarRoute,
+  deleteCalendarRoute,
+} from "../../routes/academicRoutes";
 
 function AcademicCalendar() {
   const [events, setEvents] = useState([]);
   const [newEvent, setNewEvent] = useState({
     description: "",
-    startDateTime: null,
-    endDateTime: null,
+    from_date: null,
+    to_date: null,
   });
   const [editingEvent, setEditingEvent] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchCalendarData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) return console.error("No authentication token found!");
+
       try {
-        await new Promise((resolve) => {
-          setTimeout(resolve, 100);
+        const { data } = await axios.get(calendarRoute, {
+          headers: { Authorization: `Token ${token}` },
         });
 
-        // Convert ISO strings to Date objects
-        const parsedEvents = hardcodedEvents.map((event) => ({
+        const parsedEvents = data.map((event) => ({
           ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate),
-          timestamp: new Date(event.timestamp),
+          from_date: new Date(event.from_date), // Parse date strings
+          to_date: new Date(event.to_date), // Parse date strings
         }));
 
         setEvents(parsedEvents);
       } catch (error1) {
+        console.error("Error fetching calendar data:", error1);
         setError("Failed to load events");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInitialData();
-  }, []);
+    fetchCalendarData();
+  }, [refreshTrigger]);
 
-  const columnNames = [
-    "Description",
-    "Start Date",
-    "End Date",
-    "Last Updated",
-    "Actions",
-  ];
+  const columnNames = ["Description", "Start Date", "End Date", "Actions"];
 
   // Formatting helpers
   const formatDateTime = (date) =>
@@ -116,104 +68,101 @@ function AcademicCalendar() {
       month: "short",
       day: "numeric",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     }) || "";
 
   const handleEdit = (event) => {
     setEditingEvent({
       ...event,
-      startDateTime: event.startDate,
-      endDateTime: event.endDate,
+      from_date: event.from_date,
+      to_date: event.to_date,
     });
   };
 
   const handleSaveEdit = async () => {
     if (
       !editingEvent?.description ||
-      !editingEvent.startDateTime ||
-      !editingEvent.endDateTime
+      !editingEvent.from_date ||
+      !editingEvent.to_date
     ) {
       setError("Please fill all required fields");
       return;
     }
 
     try {
-      // Simulated API call
+      const token = localStorage.getItem("authToken");
+
       const updatedEvent = {
         ...editingEvent,
-        startDate: editingEvent.startDateTime,
-        endDate: editingEvent.endDateTime,
-        timestamp: new Date(),
+        from_date: editingEvent.from_date.toLocaleDateString("en-CA"), // YYYY-MM-DD
+        to_date: editingEvent.to_date.toLocaleDateString("en-CA"), // YYYY-MM-DD
       };
+      console.log(updatedEvent);
 
-      // Replace with actual API call:
-      // const response = await fetch(`/api/events/${editingEvent.id}`, {
-      //   method: 'PUT',
-      //   body: JSON.stringify(updatedEvent)
-      // });
-
+      await axios.put(editCalendarRoute, updatedEvent, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      updatedEvent.from_date = new Date(updatedEvent.from_date);
+      updatedEvent.to_date = new Date(updatedEvent.to_date);
       setEvents(
         events.map((e) => (e.id === updatedEvent.id ? updatedEvent : e)),
       );
       setEditingEvent(null);
       setError("");
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error1) {
+      console.error(error1);
       setError("Failed to update event");
     }
   };
 
   const handleAddEvent = async () => {
-    if (
-      !newEvent.description ||
-      !newEvent.startDateTime ||
-      !newEvent.endDateTime
-    ) {
+    if (!newEvent.description || !newEvent.from_date || !newEvent.to_date) {
       setError("Please fill all required fields");
       return;
     }
 
     try {
-      // Simulated API call
+      const token = localStorage.getItem("authToken");
+
       const eventToAdd = {
         ...newEvent,
-        id: events.length + 1,
-        startDate: newEvent.startDateTime,
-        endDate: newEvent.endDateTime,
-        timestamp: new Date(),
+        from_date: newEvent.from_date.toLocaleDateString("en-CA"), // YYYY-MM-DD
+        to_date: newEvent.to_date.toLocaleDateString("en-CA"), // YYYY-MM-DD
       };
 
-      // Replace with actual API call:
-      // const response = await fetch('/api/events', {
-      //   method: 'POST',
-      //   body: JSON.stringify(eventToAdd)
-      // });
-      // const createdEvent = await response.json();
+      const { data } = await axios.post(addCalendarRoute, eventToAdd, {
+        headers: { Authorization: `Token ${token}` },
+      });
 
-      setEvents([...events, eventToAdd]);
+      setEvents([...events, data]);
       setAddModalOpen(false);
-      setNewEvent({ description: "", startDateTime: null, endDateTime: null });
+      setNewEvent({ description: "", from_date: null, to_date: null });
       setError("");
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error1) {
+      console.error(error1);
       setError("Failed to create event");
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (event) => {
     try {
-      // Simulated API call
-      // await fetch(`/api/events/${id}`, { method: 'DELETE' });
-
-      setEvents(events.filter((event) => event.id !== id));
+      const token = localStorage.getItem("authToken");
+      await axios.delete(deleteCalendarRoute, {
+        headers: { Authorization: `Token ${token}` },
+        data: { id: event.id },
+      });
+      setRefreshTrigger((prev) => prev + 1); // Increment the trigger after successful delete
     } catch (error1) {
+      console.error(error1);
       setError("Failed to delete event");
     }
   };
 
   const mappedEvents = events.map((event) => ({
     Description: event.description,
-    "Start Date": formatDateTime(event.startDate),
-    "End Date": formatDateTime(event.endDate),
+    "Start Date": formatDateTime(event.from_date),
+    "End Date": formatDateTime(event.to_date),
     "Last Updated": formatDateTime(event.timestamp),
     Actions: (
       <Group spacing="xs">
@@ -229,7 +178,7 @@ function AcademicCalendar() {
           variant="outline"
           color="red"
           size="xs"
-          onClick={() => handleDelete(event.id)}
+          onClick={() => handleDelete(event)}
         >
           Delete
         </Button>
@@ -303,22 +252,22 @@ function AcademicCalendar() {
           required
         />
 
-        <DateTimePicker
-          label="Start Date & Time"
-          value={editingEvent?.startDateTime}
+        <DatePickerInput
+          label="Start Date"
+          value={editingEvent?.from_date}
           onChange={(date) =>
-            setEditingEvent({ ...editingEvent, startDateTime: date })
+            setEditingEvent({ ...editingEvent, from_date: date })
           }
           mb="md"
           clearable
           required
         />
 
-        <DateTimePicker
-          label="End Date & Time"
-          value={editingEvent?.endDateTime}
+        <DatePickerInput
+          label="End Date"
+          value={editingEvent?.to_date}
           onChange={(date) =>
-            setEditingEvent({ ...editingEvent, endDateTime: date })
+            setEditingEvent({ ...editingEvent, to_date: date })
           }
           mb="md"
           clearable
@@ -354,19 +303,19 @@ function AcademicCalendar() {
           required
         />
 
-        <DateTimePicker
-          label="Start Date & Time"
-          value={newEvent.startDateTime}
-          onChange={(date) => setNewEvent({ ...newEvent, startDateTime: date })}
+        <DatePickerInput
+          label="Start Date"
+          value={newEvent.from_date}
+          onChange={(date) => setNewEvent({ ...newEvent, from_date: date })}
           mb="md"
           clearable
           required
         />
 
-        <DateTimePicker
-          label="End Date & Time"
-          value={newEvent.endDateTime}
-          onChange={(date) => setNewEvent({ ...newEvent, endDateTime: date })}
+        <DatePickerInput
+          label="End Date"
+          value={newEvent.to_date}
+          onChange={(date) => setNewEvent({ ...newEvent, to_date: date })}
           mb="md"
           clearable
           required
