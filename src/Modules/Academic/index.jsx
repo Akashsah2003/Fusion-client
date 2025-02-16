@@ -11,6 +11,7 @@ import FinalRegistration from "./FinalRegistration";
 import StudentCourses from "./StudentCourses";
 import DeletePreRegistration from "./DeletePreRegistration";
 import AcademicCalendar from "./AcademicCalendar";
+import GenerateStudentList from "./GenerateStudentList";
 
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
@@ -21,6 +22,7 @@ function AcademicPage() {
           { title: "Student Courses" },
           { title: "Delete Pre-Registration" },
           { title: "Academic Calendar" },
+          { title: "Generate Student List" },
         ]
       : [
           { title: "Registered Courses" },
@@ -30,7 +32,12 @@ function AcademicPage() {
         ];
   const tabComponents =
     role === "acadadmin" || role === "studentacadadmin"
-      ? [StudentCourses, DeletePreRegistration, AcademicCalendar]
+      ? [
+          StudentCourses,
+          DeletePreRegistration,
+          AcademicCalendar,
+          GenerateStudentList,
+        ]
       : [
           RegisteredCourses,
           AvailableCourses,
