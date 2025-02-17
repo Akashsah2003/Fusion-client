@@ -12,39 +12,51 @@ import StudentCourses from "./StudentCourses";
 import DeletePreRegistration from "./DeletePreRegistration";
 import AcademicCalendar from "./AcademicCalendar";
 import GenerateStudentList from "./GenerateStudentList";
+import ViewRollList from "./ViewRollList";
+import AllocateCourses from "./AllocateCourses";
 
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
   const role = useSelector((state) => state.user.role);
-  const tabItems =
-    role === "acadadmin" || role === "studentacadadmin"
-      ? [
-          { title: "Student Courses" },
-          { title: "Delete Pre-Registration" },
-          { title: "Academic Calendar" },
-          { title: "Generate Student List" },
-        ]
-      : [
-          { title: "Registered Courses" },
-          { title: "Available Courses" },
-          { title: "Pre-Registration" },
-          { title: "Final-Registration" },
-        ];
-  const tabComponents =
-    role === "acadadmin" || role === "studentacadadmin"
-      ? [
-          StudentCourses,
-          DeletePreRegistration,
-          AcademicCalendar,
-          GenerateStudentList,
-        ]
-      : [
-          RegisteredCourses,
-          AvailableCourses,
-          PreRegistration,
-          FinalRegistration,
-        ];
+
+  let tabItems;
+  let tabComponents;
+
+  if (role === "acadadmin" || role === "studentacadadmin") {
+    tabItems = [
+      { title: "Student Courses" },
+      { title: "Delete Pre-Registration" },
+      { title: "Academic Calendar" },
+      { title: "Generate Student List" },
+      { title: "Allocate Courses" },
+    ];
+    tabComponents = [
+      StudentCourses,
+      DeletePreRegistration,
+      AcademicCalendar,
+      GenerateStudentList,
+      AllocateCourses,
+    ];
+  } else if (role === "student") {
+    tabItems = [
+      { title: "Registered Courses" },
+      { title: "Available Courses" },
+      { title: "Pre-Registration" },
+      { title: "Final-Registration" },
+    ];
+    tabComponents = [
+      RegisteredCourses,
+      AvailableCourses,
+      PreRegistration,
+      FinalRegistration,
+    ];
+  } else {
+    tabItems = [{ title: "View Roll List" }];
+    tabComponents = [ViewRollList];
+  }
+
   const ActiveComponent = tabComponents[parseInt(activeTab, 10)];
+
   return (
     <>
       <CustomBreadcrumbs />
