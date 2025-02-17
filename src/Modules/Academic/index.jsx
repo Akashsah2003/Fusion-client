@@ -14,6 +14,7 @@ import AcademicCalendar from "./AcademicCalendar";
 import GenerateStudentList from "./GenerateStudentList";
 import ViewRollList from "./ViewRollList";
 import AllocateCourses from "./AllocateCourses";
+import VerifyStudentRegistration from "./VerifyStudentRegistration";
 
 function AcademicPage() {
   const [activeTab, setActiveTab] = useState("0");
@@ -29,6 +30,7 @@ function AcademicPage() {
       { title: "Academic Calendar" },
       { title: "Generate Student List" },
       { title: "Allocate Courses" },
+      { title: "Verify Student Registration" },
     ];
     tabComponents = [
       StudentCourses,
@@ -36,6 +38,7 @@ function AcademicPage() {
       AcademicCalendar,
       GenerateStudentList,
       AllocateCourses,
+      VerifyStudentRegistration,
     ];
   } else if (role === "student") {
     tabItems = [
