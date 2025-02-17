@@ -11,6 +11,7 @@ import FinalRegistration from "./FinalRegistration";
 import StudentCourses from "./StudentCourses";
 import DeletePreRegistration from "./DeletePreRegistration";
 import AcademicCalendar from "./AcademicCalendar";
+import GenerateStudentList from "./GenerateStudentList";
 import VerifyStudentRegistration from "./VerifyStudentRegistration";
 
 function AcademicPage() {
@@ -22,7 +23,10 @@ function AcademicPage() {
           { title: "Student Courses" },
           { title: "Delete Pre-Registration" },
           { title: "Academic Calendar" },
-          { title: "Verify Student Registration" },
+          { title: "Generate Student List" },
+          {
+            title: "Verify Student Registration",
+          },
         ]
       : [
           { title: "Registered Courses" },
@@ -36,6 +40,7 @@ function AcademicPage() {
           StudentCourses,
           DeletePreRegistration,
           AcademicCalendar,
+          GenerateStudentList,
           VerifyStudentRegistration,
         ]
       : [
