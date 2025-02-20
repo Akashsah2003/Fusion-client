@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Card, Text } from "@mantine/core";
+import { Card, Text, Loader, Group } from "@mantine/core";
 import axios from "axios";
 import FusionTable from "../../components/FusionTable";
 import { nextSemCoursesRoute } from "../../routes/academicRoutes";
 
 function AvailableCourses() {
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -23,9 +24,9 @@ function AvailableCourses() {
         setCourses(response.data.courses_list); // Set courses from API response
       } catch (error) {
         console.error("Error fetching courses:", error);
-        // Handle error, e.g., display an error message to the user
-        // You might want to set courses to an empty array or some default data
         setCourses([]); // Or set a default message in the table
+      } finally {
+        setTimeout(() => setLoading(false));
       }
     };
 
@@ -47,8 +48,7 @@ function AvailableCourses() {
     Credits: course.courses[0].credit,
     Course: (
       <Text style={{ whiteSpace: "pre-line" }}>
-        {course.courses.map((cour) => cour.name).join(", ")}{" "}
-        {/* Join course names */}
+        {course.courses.map((cour) => cour.name).join("\n")}
       </Text>
     ),
   }));
@@ -63,13 +63,19 @@ function AvailableCourses() {
       >
         Available Courses Next Semester
       </Text>
-      <div style={{ overflowX: "auto" }}>
-        <FusionTable
-          columnNames={columnNames}
-          elements={mappedCourses}
-          width="100%"
-        />
-      </div>
+      {loading ? (
+        <Group position="center" py="xl">
+          <Loader variant="dots" />
+        </Group>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <FusionTable
+            columnNames={columnNames}
+            elements={mappedCourses}
+            width="100%"
+          />
+        </div>
+      )}
     </Card>
   );
 }
