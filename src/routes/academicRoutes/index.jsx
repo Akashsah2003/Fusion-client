@@ -12,3 +12,5 @@ export const studentListRoute = `${host}/academic-procedures/api/acad/student_li
 export const courseListRoute = `${host}/academic-procedures/api/acad/course_list/`;
 export const verifyRegistrationRoute = `${host}/academic-procedures/api/acad/verify_registration/`;
 export const batchesRoute = `${host}/programme_curriculum/api/admin_batches/`;
+export const checkAllocationRoute = `${host}/aims/api/check-allocation`;
+export const startAllocationRoute = `${host}/aims/api/start-allocation`;
