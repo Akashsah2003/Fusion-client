@@ -59,6 +59,14 @@ function AcademicPage() {
       FinalRegistration,
       SwayamRegistration,
     ];
+  } else if (
+    role === "faculty" ||
+    role === "Associate Professor" ||
+    role === "Assistant Professor" ||
+    role === "Professor"
+  ) {
+    tabItems = [{ title: "View Roll List" }];
+    tabComponents = [ViewRollList];
   } else {
     tabItems = [{ title: "View Roll List" }];
     tabComponents = [ViewRollList];
