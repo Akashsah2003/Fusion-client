@@ -14,3 +14,6 @@ export const verifyRegistrationRoute = `${host}/academic-procedures/api/acad/ver
 export const batchesRoute = `${host}/programme_curriculum/api/admin_batches/`;
 export const checkAllocationRoute = `${host}/aims/api/check-allocation`;
 export const startAllocationRoute = `${host}/aims/api/start-allocation`;
+export const getStudentCourseRoute = `${host}/academic-procedures/api/acad/verify_course/`;
+export const dropStudentCourseRoute = `${host}/academic-procedures/api/acad/verify_course/drop/`;
+export const addStudentCourseRoute = `${host}/academic-procedures/api/acad/addCourse/`;
