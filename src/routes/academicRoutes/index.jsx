@@ -17,3 +17,5 @@ export const startAllocationRoute = `${host}/aims/api/start-allocation`;
 export const getStudentCourseRoute = `${host}/academic-procedures/api/acad/verify_course/`;
 export const dropStudentCourseRoute = `${host}/academic-procedures/api/acad/verify_course/drop/`;
 export const addStudentCourseRoute = `${host}/academic-procedures/api/acad/addCourse/`;
+export const generatexlsheet = `${host}/aims/api/generatexlsheet`;
+export const academicProceduresFaculty = `${host}/academic-procedures/api/fac/academic_procedures_faculty`;
