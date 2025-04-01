@@ -33,6 +33,7 @@ function VerifyStudentRegistration() {
   const [error, setError] = useState(null);
   const containerRef = useRef(null);
   const [remarks, setRemarks] = useState({});
+  const [dataFetched, setDataFetched] = useState(false); // New state to track if data is fetched
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -88,7 +89,6 @@ function VerifyStudentRegistration() {
           responseType: excel ? "blob" : "json",
         },
       );
-      // if (!response.ok) throw new Error("Failed to fetch students");
       if (excel) {
         const blob = new Blob([response.data], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -96,6 +96,7 @@ function VerifyStudentRegistration() {
         saveAs(blob, `Student_List_${batch}.xlsx`);
       } else {
         setStudents(response.data.students);
+        setDataFetched(true); // Mark data as fetched
       }
     } catch (err) {
       setError(err.message);
@@ -199,13 +200,18 @@ function VerifyStudentRegistration() {
 
       <Select
         label="Batch"
-        placeholder="Select Batch"
+        placeholder={loading ? "Loading batches..." : "Select Batch"}
         value={batch}
         onChange={setBatch}
-        data={batches.map((bat) => ({
-          value: bat.batch_id.toString(),
-          label: `${bat.name} ${bat.discipline} ${bat.year}`,
-        }))}
+        data={
+          loading
+            ? [{ value: "", label: "Loading..." }] // Show "Loading..." option
+            : batches.map((bat) => ({
+                value: bat.batch_id.toString(),
+                label: `${bat.name} ${bat.discipline} ${bat.year}`,
+              }))
+        }
+        disabled={loading}
       />
 
       <Group position="center" mt="md">
@@ -219,7 +225,7 @@ function VerifyStudentRegistration() {
         <Button
           color="green"
           onClick={() => handleFetch(true)}
-          disabled={loading}
+          disabled={loading || !dataFetched} // Disable until data is fetched
         >
           {loading ? <Loader size="xs" /> : "Fetch Excel Sheet"}
         </Button>

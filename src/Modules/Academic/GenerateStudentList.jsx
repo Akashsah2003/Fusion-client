@@ -9,6 +9,7 @@ import {
   Box,
   Space,
   TextInput,
+  Loader,
 } from "@mantine/core";
 import axios from "axios";
 import {
@@ -26,11 +27,14 @@ function GenerateStudentList() {
   const [semester, setSemester] = useState("");
   const [batchOptions, setBatchOptions] = useState([]);
   const [courseOptions, setCourseOptions] = useState([]);
+  const [loading, setLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     const getCourses = async () => {
+      setLoading(true); // Start loading
       const token = localStorage.getItem("authToken"); // Get token from local storage
       if (!token) {
+        setLoading(false); // Stop loading
         throw new Error("No token found"); // Handle the case where the token is not available
       }
 
@@ -44,11 +48,15 @@ function GenerateStudentList() {
         setCourseOptions(response.data);
       } catch (error) {
         console.error("Error getting all courses:", error);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
     const fetchBatches = async () => {
+      setLoading(true); // Start loading
       const token = localStorage.getItem("authToken");
       if (!token) {
+        setLoading(false); // Stop loading
         return;
       }
       try {
@@ -61,6 +69,8 @@ function GenerateStudentList() {
         setBatchOptions(response.data.batches);
       } catch (fetchError) {
         console.error(fetchError);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
     if (activeTab === "rolllist") {
@@ -71,8 +81,10 @@ function GenerateStudentList() {
   }, [activeTab]);
 
   const handleGenerateList = async () => {
+    setLoading(true); // Start loading
     const token = localStorage.getItem("authToken"); // Get token from local storage
     if (!token) {
+      setLoading(false); // Stop loading
       throw new Error("No token found"); // Handle the case where the token is not available
     }
 
@@ -100,12 +112,16 @@ function GenerateStudentList() {
       link.remove();
     } catch (error) {
       console.error("Error getting roll list:", error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   const generatePreRegistrationReport = async () => {
+    setLoading(true); // Start loading
     const token = localStorage.getItem("authToken"); // Get token from local storage
     if (!token) {
+      setLoading(false); // Stop loading
       throw new Error("No token found"); // Handle the case where the token is not available
     }
 
@@ -133,6 +149,8 @@ function GenerateStudentList() {
       link.remove();
     } catch (error) {
       console.error("Error getting roll list:", error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -285,6 +303,18 @@ function GenerateStudentList() {
           </Box>
         </Tabs.Panel>
       </Tabs>
+      {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader variant="dots" />
+        </div>
+      )}
     </Card>
   );
 }

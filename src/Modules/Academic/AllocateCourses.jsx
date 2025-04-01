@@ -6,6 +6,7 @@ import {
   TextInput,
   Alert,
   NumberInput,
+  Loader,
 } from "@mantine/core";
 import axios from "axios";
 import {
@@ -135,10 +136,22 @@ function AllocateCourses() {
         style={{ backgroundColor: "#3B82F6", color: "white" }}
         onClick={handleCheckAllocation}
         mb="md"
-        loading={loading}
       >
         Check Allocation
       </Button>
+
+      {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader variant="dots" />
+        </div>
+      )}
 
       {error && (
         <Alert title="Notice" color="red" mt="lg">

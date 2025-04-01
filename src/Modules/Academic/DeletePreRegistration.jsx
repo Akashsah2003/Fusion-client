@@ -7,6 +7,7 @@ import {
   Alert,
   Group,
   Modal,
+  Loader,
 } from "@mantine/core";
 import axios from "axios";
 import FusionTable from "../../components/FusionTable";
@@ -21,17 +22,21 @@ function RegistrationSearch() {
   const [searchResults, setSearchResults] = useState(null);
   const [error, setError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
 
   const handleSearch = async () => {
     setError("");
     setSearchResults(null);
+    setLoading(true); // Start loading
     if (!rollNo || !semester) {
       setError("Please fill both Roll No and Semester fields");
+      setLoading(false); // Stop loading
       return;
     }
 
     const token = localStorage.getItem("authToken"); // Get token from local storage
     if (!token) {
+      setLoading(false); // Stop loading
       throw new Error("No token found"); // Handle the case where the token is not available
     }
 
@@ -57,6 +62,8 @@ function RegistrationSearch() {
     } catch (err) {
       console.error("Error searching:", err);
       setError(err);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -66,6 +73,7 @@ function RegistrationSearch() {
       throw new Error("No token found"); // Handle the case where the token is not available
     }
 
+    setLoading(true); // Start loading
     try {
       const response = await axios.post(
         deletePreRegistrationRoute,
@@ -86,6 +94,8 @@ function RegistrationSearch() {
     } catch (er) {
       console.error("Error searching:", er);
       setError(er);
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -132,8 +142,9 @@ function RegistrationSearch() {
           radius="sm"
           onClick={handleSearch}
           style={{ backgroundColor: "#3B82F6", color: "white" }}
+          disabled={loading} // Disable button while loading
         >
-          Search
+          {loading ? "Loading..." : "Search"} {/* Show loading text */}
         </Button>
       </div>
 
@@ -229,6 +240,19 @@ function RegistrationSearch() {
         </div>
       )}
 
+      {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader variant="dots" />
+        </div>
+      )}
+
       <Modal
         opened={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -249,8 +273,10 @@ function RegistrationSearch() {
             onClick={() => {
               handleDelete();
             }}
+            disabled={loading} // Disable button while loading
           >
-            Confirm Delete
+            {loading ? "Deleting..." : "Confirm Delete"}{" "}
+            {/* Show loading text */}
           </Button>
         </Group>
       </Modal>

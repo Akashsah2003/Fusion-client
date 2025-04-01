@@ -9,6 +9,7 @@ import {
   Select,
   Stack,
   TextInput,
+  Loader,
 } from "@mantine/core";
 import { IconUpload, IconFileSpreadsheet } from "@tabler/icons-react";
 import axios from "axios";
@@ -27,13 +28,16 @@ function AllotCourses() {
   const [semester, setSemester] = useState("");
   const [workingYear, setWorkingYear] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // useEffect to fetch options from API. Replace the URLs with your actual endpoints.
   useEffect(() => {
     const fetchOptions = async () => {
+      setLoading(true); // Start loading
       const token = localStorage.getItem("authToken");
       if (!token) {
         setError(new Error("No token found"));
+        setLoading(false); // Stop loading
         return;
       }
       try {
@@ -46,6 +50,8 @@ function AllotCourses() {
         setProgrammeOptions(response.data.batches);
       } catch (fetchError) {
         setError(fetchError.message);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
 
@@ -67,6 +73,7 @@ function AllotCourses() {
       return;
     }
     setIsUploading(true);
+    setLoading(true); // Start loading
     const token = localStorage.getItem("authToken");
     if (!token) {
       setError(new Error("No token found"));
@@ -103,6 +110,7 @@ function AllotCourses() {
       }
     } finally {
       setIsUploading(false);
+      setLoading(false); // Stop loading
       setSelectedFile(null);
     }
   };
@@ -249,6 +257,19 @@ function AllotCourses() {
           </Button>
         )}
       </div>
+
+      {loading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "1rem",
+          }}
+        >
+          <Loader variant="dots" />
+        </div>
+      )}
 
       {showSuccess && (
         <Alert

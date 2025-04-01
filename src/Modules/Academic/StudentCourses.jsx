@@ -9,6 +9,7 @@ import {
   Group,
   NumberInput,
   Select,
+  Loader,
 } from "@mantine/core";
 import axios from "axios";
 import FusionTable from "../../components/FusionTable";
@@ -33,6 +34,7 @@ function StudentCourses() {
     working_year: "",
     old_course: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleGetCourses = async () => {
     const token = localStorage.getItem("authToken");
@@ -40,6 +42,7 @@ function StudentCourses() {
       setError(new Error("No token found"));
       return;
     }
+    setLoading(true);
     try {
       const response = await axios.post(
         getStudentCourseRoute,
@@ -56,6 +59,8 @@ function StudentCourses() {
       setStudentData(response.data);
     } catch (fetchError) {
       setError(fetchError);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,6 +70,7 @@ function StudentCourses() {
       setError(new Error("No token found"));
       return;
     }
+    setLoading(true);
     try {
       const response = await axios.post(
         `${dropStudentCourseRoute}?id=${regId}`,
@@ -82,6 +88,8 @@ function StudentCourses() {
       }
     } catch (fetchError) {
       setError(fetchError);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +112,7 @@ function StudentCourses() {
     formData.append("semester_id", newCourse.semester_no);
     formData.append("working_year", newCourse.working_year);
     formData.append("old_course", newCourse.old_course);
+    setLoading(true);
     try {
       const response = await axios.post(addStudentCourseRoute, formData, {
         headers: {
@@ -117,6 +126,8 @@ function StudentCourses() {
       }
     } catch (fetchError) {
       setError(fetchError);
+    } finally {
+      setLoading(false);
     }
     setAddModalOpen(false);
   };
@@ -149,10 +160,8 @@ function StudentCourses() {
           : "NA",
         Actions: (
           <Button
-            style={{
-              backgroundColor: "#FF3131",
-              color: "white",
-            }}
+            variant="outline"
+            color="red"
             size="xs"
             onClick={() => confirmDrop(course.reg_id)}
           >
@@ -188,167 +197,184 @@ function StudentCourses() {
         Fetch Courses
       </Button>
 
-      {error && (
-        <Alert title="Error: No Data" color="red" mt="lg">
-          {error}
-        </Alert>
-      )}
-
-      {studentData && (
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Loader variant="dots" />
+        </div>
+      ) : (
         <>
-          <Text weight={500} mb="lg">
-            Name: {studentData.dict2.firstname} {studentData.dict2.lastname}
-          </Text>
-          <Text weight={500} mb="lg">
-            Roll Number: {studentData.dict2.roll_no}
-          </Text>
+          {error && (
+            <Alert title="Error: No Data" color="red" mt="lg">
+              {error}
+            </Alert>
+          )}
 
-          <div style={{ overflowX: "auto" }}>
-            <FusionTable
-              columnNames={columnNames}
-              elements={mappedCourses}
-              width="100%"
-            />
-          </div>
+          {studentData && (
+            <>
+              <Text weight={500} mb="lg">
+                Name: {studentData.dict2.firstname} {studentData.dict2.lastname}
+              </Text>
+              <Text weight={500} mb="lg">
+                Roll Number: {studentData.dict2.roll_no}
+              </Text>
 
-          <Button
-            style={{
-              backgroundColor: "#4CBB17",
-              color: "white",
-            }}
-            mt="lg"
-            onClick={() => setAddModalOpen(true)}
+              <div style={{ overflowX: "auto" }}>
+                <FusionTable
+                  columnNames={columnNames}
+                  elements={mappedCourses}
+                  width="100%"
+                />
+              </div>
+
+              <Button
+                style={{
+                  backgroundColor: "#4CBB17",
+                  color: "white",
+                }}
+                mt="lg"
+                onClick={() => setAddModalOpen(true)}
+              >
+                Add Course
+              </Button>
+
+              <Text weight={700} mt="lg">
+                Total Credits: {totalCredits}
+              </Text>
+            </>
+          )}
+
+          {/* Add Course Modal */}
+          <Modal
+            opened={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            title="Add New Course"
           >
-            Add Course
-          </Button>
+            <Select
+              label="Course Slot"
+              placeholder="Enter Course Slot"
+              value={newCourse.courseslot_id}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, courseslot_id: value })
+              }
+              data={
+                studentData
+                  ? studentData.courseslot_list.map((slot) => ({
+                      value: slot.id.toString(),
+                      label: slot.name,
+                    }))
+                  : []
+              }
+              mb="sm"
+              searchable
+            />
+            <Select
+              label="Course ID"
+              placeholder="Enter Course ID"
+              value={newCourse.course_id}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, course_id: value })
+              }
+              data={
+                studentData
+                  ? studentData.course_list.map((course) => ({
+                      value: course.id.toString(),
+                      label: `${course.code} - ${course.name}`,
+                    }))
+                  : []
+              }
+              mb="sm"
+              searchable
+            />
+            <Select
+              label="Semester"
+              placeholder="Enter Semester"
+              value={newCourse.semester_no}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, semester_no: value })
+              }
+              mb="sm"
+              data={
+                studentData
+                  ? studentData.semester_list.map((sem) => ({
+                      value: sem.id.toString(),
+                      label: `Semester - ${sem.semester_no}`,
+                    }))
+                  : []
+              }
+              searchable
+            />
+            <NumberInput
+              label="Working Year"
+              placeholder="Enter Working Year"
+              value={newCourse.working_year}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, working_year: value })
+              }
+              mb="sm"
+            />
+            <Select
+              label="Type"
+              placeholder="Select Type"
+              data={["Regular", "Improvement", "Backlog", "Audit"]}
+              value={newCourse.registration_type}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, registration_type: value })
+              }
+              searchable
+              mb="sm"
+            />
+            <Select
+              label="Replace Course"
+              placeholder="Select the course to replace"
+              data={
+                studentData
+                  ? studentData.details.map((course) => ({
+                      value: course.reg_id.toString(),
+                      label: `${course.course_id} - sem - ${course.sem}`,
+                    }))
+                  : []
+              }
+              value={newCourse.old_course}
+              onChange={(value) =>
+                setNewCourse({ ...newCourse, old_course: value })
+              }
+              searchable
+              mb="sm"
+            />
+            <Group position="right">
+              <Button color="green" onClick={handleAddCourse}>
+                Add
+              </Button>
+            </Group>
+          </Modal>
 
-          <Text weight={700} mt="lg">
-            Total Credits: {totalCredits}
-          </Text>
+          <Modal
+            opened={dropModalOpen}
+            onClose={() => setDropModalOpen(false)}
+            title="Confirm Course Drop"
+          >
+            <Text>Are you sure you want to drop this course?</Text>
+            <Text weight={600} mt="sm">
+              This action cannot be undone!
+            </Text>
+            <Group position="right" mt="lg">
+              <Button variant="outline" onClick={() => setDropModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button color="red" onClick={() => handleDrop(courseToDrop)}>
+                Confirm Drop
+              </Button>
+            </Group>
+          </Modal>
         </>
       )}
-
-      {/* Add Course Modal */}
-      <Modal
-        opened={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        title="Add New Course"
-      >
-        <Select
-          label="Course Slot"
-          placeholder="Enter Course Slot"
-          value={newCourse.courseslot_id}
-          onChange={(value) =>
-            setNewCourse({ ...newCourse, courseslot_id: value })
-          }
-          data={
-            studentData
-              ? studentData.courseslot_list.map((slot) => ({
-                  value: slot.id.toString(),
-                  label: slot.name,
-                }))
-              : []
-          }
-          mb="sm"
-          searchable
-        />
-        <Select
-          label="Course ID"
-          placeholder="Enter Course ID"
-          value={newCourse.course_id}
-          onChange={(value) => setNewCourse({ ...newCourse, course_id: value })}
-          data={
-            studentData
-              ? studentData.course_list.map((course) => ({
-                  value: course.id.toString(),
-                  label: `${course.code} - ${course.name}`,
-                }))
-              : []
-          }
-          mb="sm"
-          searchable
-        />
-        <Select
-          label="Semester"
-          placeholder="Enter Semester"
-          value={newCourse.semester_no}
-          onChange={(value) =>
-            setNewCourse({ ...newCourse, semester_no: value })
-          }
-          mb="sm"
-          data={
-            studentData
-              ? studentData.semester_list.map((sem) => ({
-                  value: sem.id.toString(),
-                  label: `Semester - ${sem.semester_no}`,
-                }))
-              : []
-          }
-          searchable
-        />
-        <NumberInput
-          label="Working Year"
-          placeholder="Enter Working Year"
-          value={newCourse.working_year}
-          onChange={(value) =>
-            setNewCourse({ ...newCourse, working_year: value })
-          }
-          mb="sm"
-        />
-        <Select
-          label="Type"
-          placeholder="Select Type"
-          data={["Regular", "Improvement", "Backlog", "Audit"]}
-          value={newCourse.registration_type}
-          onChange={(value) =>
-            setNewCourse({ ...newCourse, registration_type: value })
-          }
-          searchable
-          mb="sm"
-        />
-        <Select
-          label="Replace Course"
-          placeholder="Select the course to replace"
-          data={
-            studentData
-              ? studentData.details.map((course) => ({
-                  value: course.reg_id.toString(),
-                  label: `${course.course_id} - sem - ${course.sem}`,
-                }))
-              : []
-          }
-          value={newCourse.old_course}
-          onChange={(value) =>
-            setNewCourse({ ...newCourse, old_course: value })
-          }
-          searchable
-          mb="sm"
-        />
-        <Group position="right">
-          <Button color="green" onClick={handleAddCourse}>
-            Add
-          </Button>
-        </Group>
-      </Modal>
-
-      <Modal
-        opened={dropModalOpen}
-        onClose={() => setDropModalOpen(false)}
-        title="Confirm Course Drop"
-      >
-        <Text>Are you sure you want to drop this course?</Text>
-        <Text weight={600} mt="sm">
-          This action cannot be undone!
-        </Text>
-        <Group position="right" mt="lg">
-          <Button variant="outline" onClick={() => setDropModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button color="red" onClick={() => handleDrop(courseToDrop)}>
-            Confirm Drop
-          </Button>
-        </Group>
-      </Modal>
     </Card>
   );
 }
